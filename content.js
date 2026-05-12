@@ -36,11 +36,11 @@
   const MARKER = "data-xlr-processed";
   const MAX_ERRORS_BEFORE_RESET = 20;
 
-  // ── Timeline detection ──────────────────────────────────────────────
-  // We only operate on timelines: home, user profiles, lists, search
-  function isTimelinePage() {
+  // ── Page detection ──────────────────────────────────────────────────
+  // We operate on timelines AND individual tweet/status pages
+  function isSupportedPage() {
     const path = location.pathname;
-    const timelinePatterns = [
+    const supportedPatterns = [
       /^\/home$/,                  // Home timeline
       /^\/i\/lists\//,             // List timelines
       /^\/search/,                 // Search results
@@ -48,21 +48,21 @@
       /^\/[^/]+\/with_replies$/,   // User profile replies tab
       /^\/[^/]+\/likes$/,          // User profile likes tab
       /^\/[^/]+\/media$/,          // User profile media tab
+      /^\/[^/]+\/status\/.+/,      // Individual tweet / status pages
     ];
-    // Exclude known non-timeline single-segment paths
+    // Exclude known non-tweet paths
     const excludePatterns = [
       /^\/settings/,
       /^\/messages/,
       /^\/notifications/,
       /^\/i\/bookmarks/,
       /^\/compose/,
-      /^\/[^/]+\/status\//,       // Individual tweet pages (not timeline)
     ];
 
     for (const ex of excludePatterns) {
       if (ex.test(path)) return false;
     }
-    for (const pat of timelinePatterns) {
+    for (const pat of supportedPatterns) {
       if (pat.test(path)) return true;
     }
     return false;
@@ -188,44 +188,45 @@
         return;
       }
 
-      // Find insertion point: after the views/analytics link or at end of group
-      // The analytics link has href ending in /analytics
-      const analyticsLink = group.querySelector('a[href$="/analytics"]');
-      // Fallback: the bookmark button
-      const bookmarkBtn = group.querySelector('[data-testid="bookmark"]');
-
       const badge = createBadge(metrics);
       if (!badge) {
         group.setAttribute(MARKER, "no-badge");
         return;
       }
 
-      // Insert the badge. We want it between the views count and bookmark.
-      // The views link is inside a wrapper div; insert after that wrapper.
-      if (analyticsLink) {
-        const wrapper = analyticsLink.closest(
-          ".css-175oi2r.r-18u37iz.r-1h0z5md.r-13awgt0"
-        );
-        if (wrapper && wrapper.parentNode) {
-          wrapper.parentNode.insertBefore(badge, wrapper.nextSibling);
-        } else {
-          // Fallback: just append to the group
-          analyticsLink.parentElement.insertBefore(
-            badge,
-            analyticsLink.nextSibling
-          );
+      // Universal insertion: find the like button, walk up to the group's
+      // direct child wrapper, and insert the badge right after it.
+      // This works for both timeline and status page layouts:
+      //   Timeline: reply | retweet | like | [BADGE] | views | bookmark | share
+      //   Status:   reply | retweet | like | [BADGE] | bookmark | share
+      const likeBtn = group.querySelector(
+        '[data-testid="like"], [data-testid="unlike"]'
+      );
+
+      if (likeBtn) {
+        // Walk up from the like button to find the direct child of group
+        let likeWrapper = likeBtn;
+        while (
+          likeWrapper.parentElement &&
+          likeWrapper.parentElement !== group
+        ) {
+          likeWrapper = likeWrapper.parentElement;
         }
-      } else if (bookmarkBtn) {
-        const wrapper = bookmarkBtn.closest(
-          ".css-175oi2r.r-18u37iz.r-1h0z5md"
-        );
-        if (wrapper && wrapper.parentNode) {
-          wrapper.parentNode.insertBefore(badge, wrapper);
+
+        if (likeWrapper.parentElement === group) {
+          group.insertBefore(badge, likeWrapper.nextSibling);
+          log(
+            LOG_LEVELS.DEBUG,
+            "Inserted badge after like button wrapper"
+          );
         } else {
+          // Fallback: append to group
           group.appendChild(badge);
+          log(LOG_LEVELS.DEBUG, "Fallback: appended badge to group");
         }
       } else {
         group.appendChild(badge);
+        log(LOG_LEVELS.DEBUG, "No like button found, appended badge to group");
       }
 
       group.setAttribute(MARKER, "done");
@@ -245,8 +246,8 @@
   }
 
   function processAllTweets() {
-    if (!isTimelinePage()) {
-      log(LOG_LEVELS.DEBUG, "Not a timeline page, skipping");
+    if (!isSupportedPage()) {
+      log(LOG_LEVELS.DEBUG, "Not a supported page, skipping");
       return;
     }
 
@@ -266,7 +267,7 @@
 
   // ── Update existing badges when counts change ───────────────────────
   function updateExistingBadges() {
-    if (!isTimelinePage()) return;
+    if (!isSupportedPage()) return;
 
     const articles = document.querySelectorAll('article[data-testid="tweet"]');
     articles.forEach((article) => {
@@ -380,14 +381,14 @@
   }
 
   function handleNavigation() {
-    if (isTimelinePage()) {
-      log(LOG_LEVELS.INFO, "On timeline page, activating");
+    if (isSupportedPage()) {
+      log(LOG_LEVELS.INFO, "On supported page, activating");
       startObserver();
       // Process tweets that are already on page
       setTimeout(processAllTweets, 300);
       setTimeout(processAllTweets, 1000);
     } else {
-      log(LOG_LEVELS.INFO, "Not a timeline page, deactivating observer");
+      log(LOG_LEVELS.INFO, "Not a supported page, deactivating observer");
       stopObserver();
     }
   }
@@ -427,7 +428,7 @@
   function init() {
     log(LOG_LEVELS.INFO, "X Like Ratio extension loaded");
     log(LOG_LEVELS.INFO, `Current page: ${location.href}`);
-    log(LOG_LEVELS.INFO, `Is timeline: ${isTimelinePage()}`);
+    log(LOG_LEVELS.INFO, `Is supported page: ${isSupportedPage()}`);
 
     watchNavigation();
     handleNavigation();

@@ -6,7 +6,7 @@ A Chrome extension that displays the **like-to-view ratio** on X (Twitter) timel
 
 ## What it does
 
-For every tweet on your timeline, the extension calculates `likes ÷ views` and displays a color-coded percentage badge directly in the tweet's action bar (between the view count and bookmark button).
+For every tweet on your timeline or status page, the extension calculates `likes ÷ views` and displays a color-coded percentage badge directly in the tweet's action bar (right after the like button).
 
 ### Engagement Tiers
 
@@ -32,14 +32,14 @@ Hovering over the badge reveals a tooltip with the exact like and view counts.
 
 ## Where it Works
 
-The extension activates on **timeline views only**:
+The extension activates on **timelines and tweet pages**:
 
 - ✅ Home timeline (`/home`)
 - ✅ User profiles (`/@username`)
 - ✅ User profile tabs (replies, likes, media)
 - ✅ List timelines
 - ✅ Search results
-- ❌ Individual tweet pages (intentionally excluded)
+- ✅ Individual tweet / status pages (`/user/status/id`) — including replies
 - ❌ DMs, notifications, settings
 
 ## How it Parses Tweet Data
