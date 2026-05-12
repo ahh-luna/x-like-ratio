@@ -1,0 +1,85 @@
+/* ── X Like Ratio Badge ─────────────────────────────────────────────── */
+
+.xlr-ratio-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  transition: opacity 0.2s ease;
+  cursor: default;
+  user-select: none;
+  position: relative;
+}
+
+/* Color tiers — cold-to-hot based on engagement ratio */
+.xlr-ratio-badge.xlr-tier-cold {
+  background-color: rgba(113, 118, 123, 0.15);
+  color: rgb(113, 118, 123);
+}
+
+.xlr-ratio-badge.xlr-tier-cool {
+  background-color: rgba(29, 155, 240, 0.12);
+  color: rgb(29, 155, 240);
+}
+
+.xlr-ratio-badge.xlr-tier-warm {
+  background-color: rgba(0, 186, 124, 0.12);
+  color: rgb(0, 186, 124);
+}
+
+.xlr-ratio-badge.xlr-tier-hot {
+  background-color: rgba(249, 24, 128, 0.12);
+  color: rgb(249, 24, 128);
+}
+
+.xlr-ratio-badge.xlr-tier-fire {
+  background-color: rgba(255, 122, 0, 0.15);
+  color: rgb(255, 122, 0);
+}
+
+/* Tooltip on hover */
+.xlr-ratio-badge::after {
+  content: attr(data-xlr-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 10000;
+  line-height: 1.4;
+}
+
+.xlr-ratio-badge:hover::after {
+  opacity: 1;
+}
+
+/* Small heart icon before the ratio */
+.xlr-ratio-badge .xlr-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* Container inserted into the action bar */
+.xlr-ratio-container {
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
